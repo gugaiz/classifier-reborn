@@ -123,7 +123,7 @@ module ClassifierReborn
       word_hash = Hasher.word_hash(text, @language, @enable_stemmer)
       if word_hash.empty?
         category_keys.each do |category|
-          score[category.to_s] = Float::INFINITY
+          score[category.to_s] = -Float::INFINITY
         end
         return score
       end
@@ -137,6 +137,7 @@ module ClassifierReborn
         # now add prior probability for the category
         s = @backend.category_has_trainings?(category) ? @backend.category_training_count(category) : 0.1
         score[category.to_s] += Math.log(s / @backend.total_trainings.to_f)
+        score[category.to_s] *= -1 if score[category.to_s] == Float::INFINITY
       end
       score
     end
@@ -152,7 +153,7 @@ module ClassifierReborn
     # Return the classification without the score
     def classify(text)
       result, score = classify_with_score(text)
-      result = nil if score < @threshold || score == Float::INFINITY if threshold_enabled?
+      result = nil if score < @threshold || score == -Float::INFINITY if threshold_enabled?
       result
     end
 
